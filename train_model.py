@@ -23,3 +23,15 @@ class XrayDataset(Dataset):
                 self.image_paths.append(os.path.join(class_dir, img_name))
                 self.labels.append(0x if lable == "NORMAL" else 1)
 
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        image_path = self.image_paths[idx]
+        image = Image.open(image_path).convert("RGB")
+        lable = self.labels[idx]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, lable
