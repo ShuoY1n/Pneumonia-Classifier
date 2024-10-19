@@ -35,3 +35,17 @@ class XrayDataset(Dataset):
             image = self.transform(image)
 
         return image, lable
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+train_dataset = XrayDataset(root_dir="chest_xray/train", transform=transform)
+test_dataset = XrayDataset(root_dir="chest_xray/test", transform=transform)
+val_dataset = XrayDataset(root_dir="chest_xray/eval", transform=transform)
+
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=16, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=16, shuffle=True)
