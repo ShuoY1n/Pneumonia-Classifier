@@ -47,5 +47,22 @@ test_dataset = XrayDataset(root_dir="chest_xray/test", transform=transform)
 val_dataset = XrayDataset(root_dir="chest_xray/eval", transform=transform)
 
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+
+model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+model.fc = nn.Linear(model.fc.in_features, 2)
+model = model.to(device)
+
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+num_epochs = 10
+
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+
+    for images, lables in train_loader:
+        images = images.to(device)
+        lables = lables.to(device) 
