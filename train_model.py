@@ -1,4 +1,5 @@
 import os
+from signal import valid_signals
 from PIL import Image
 import torch
 import torch.nn as nn
@@ -65,4 +66,49 @@ for epoch in range(num_epochs):
 
     for images, lables in train_loader:
         images = images.to(device)
-        lables = lables.to(device) 
+        lables = lables.to(device)
+
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, lables)
+        loss.backward()
+
+        optimizer.step()
+        running_loss += loss
+
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader)}")
+
+    model.eval()
+    val_lables = []
+    val_preds = []
+
+    with torch.no_grad():
+        for images, lables in val_loader:
+            images = images.to(device)
+            lables = lables.to(device)
+
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            val_lables.extend(lables.cpu().numpy())
+            val_preds.extend(predicted.cpu().numpy())
+
+    val_acc = accuracy_score(val_lables, val_preds)
+    print("Validation Accuracy: ", val_acc)
+
+    
+model.eval()
+test_lables = []
+test_preds = []
+
+with torch.no_grad():
+    for images, lables in test_loader:
+        images = images.to(device)
+        lables = lables.to(device)
+
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        test_lables.extend(lables.cpu().numpy())
+        test_preds.extend(predicted.cpu().numpy())
+
+test_acc = accuracy_score(test_lables, test_preds)
+print("Test Accuracy: ", test_acc)
