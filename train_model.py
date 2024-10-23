@@ -22,7 +22,7 @@ class XrayDataset(Dataset):
             class_dir = os.path.join(root_dir, lable)
             for img_name in os.listdir(class_dir):
                 self.image_paths.append(os.path.join(class_dir, img_name))
-                self.labels.append(0x if lable == "NORMAL" else 1)
+                self.labels.append(0 if lable == "NORMAL" else 1)
 
     def __len__(self):
         return len(self.image_paths)
@@ -43,17 +43,23 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-train_dataset = XrayDataset(root_dir="chest_xray/train", transform=transform)
-test_dataset = XrayDataset(root_dir="chest_xray/test", transform=transform)
-val_dataset = XrayDataset(root_dir="chest_xray/eval", transform=transform)
+train_dataset = XrayDataset(root_dir="/mnt/c/Users/jacks/Downloads/archive/chest_xray/train", transform=transform)
+test_dataset = XrayDataset(root_dir="/mnt/c/Users/jacks/Downloads/archive/chest_xray/test", transform=transform)
+val_dataset = XrayDataset(root_dir="/mnt/c/Users/jacks/Downloads/archive/chest_xray/val", transform=transform)
 
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4)
+val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=4)
 
 model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
 model.fc = nn.Linear(model.fc.in_features, 2)
 model = model.to(device)
+
+if os.path.exists("pneumonia_model.pth"):
+    model.load_state_dict(torch.load("pneumonia_model.pth"))
+    print("Model loaded from checkpoint")
+else:
+    print("Model not found, starting from scratch")
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -112,3 +118,5 @@ with torch.no_grad():
 
 test_acc = accuracy_score(test_lables, test_preds)
 print("Test Accuracy: ", test_acc)
+
+torch.save(model.state_dict(), "pneumonia_model.pth")
